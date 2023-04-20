@@ -28,6 +28,70 @@ def unnest_data(df) -> DataFrame:
     return df
 
 
+def preprocess(df) -> DataFrame:
+    df[["pic_num_items", "pic_max_size", "pic_min_size", "pic_num_sizes"]] = df.apply(
+        lambda x: extract_pic_features(x["pictures"]), axis=1, result_type="expand"
+    )
+
+    df[
+        [
+            "nmp_cash",
+            "nmp_giro_postal",
+            "nmp_buyer",
+            "nmp_mp",
+            "nmp_transf",
+            "nmp_tc",
+            "nmp_qty",
+        ]
+    ] = df.apply(
+        lambda x: extract_nmp_payment_methods_features(
+            x["non_mercado_pago_payment_methods"]
+        ),
+        axis=1,
+        result_type="expand",
+    )
+
+    df[
+        [
+            "tag_good_qt",
+            "tag_poor_qt",
+            "tag_dragg_v",
+            "tag_dragg_bv",
+        ]
+    ] = df.apply(
+        lambda x: extract_tag_features(x["tags"]),
+        axis=1,
+        result_type="expand",
+    )
+
+    df["shippingfree_methods"] = df["shippingfree_methods"].isna()
+
+    df["seller_addresscity_id"] = np.where(
+        df.seller_addresscity_id == "", None, df.seller_addresscity_id
+    )
+
+    df["total_qty"] = df.apply(lambda x: get_variations_feture(x["variations"]), axis=1)
+
+    df["title_used"] = df["title"].str.lower().str.contains("usado|used")
+
+    df["warranty"] = df["warranty"].apply(get_warranty_features)
+
+    df["thumbnail_diff"] = df["secure_thumbnail"] != df["thumbnail"]
+    df["thumbnail"] = np.where(df["thumbnail"].apply(len) == 0, False, True)
+
+    df["date_created"] = pd.to_datetime(
+        df["date_created"], format="%Y-%m-%dT%H:%M:%S.%fZ"
+    )
+    df["last_updated"] = pd.to_datetime(
+        df["last_updated"], format="%Y-%m-%dT%H:%M:%S.%fZ"
+    )
+    df["days_since_update"] = (df["last_updated"] - df["date_created"]).dt.days
+    df["wknd_hlday_created"] = df["date_created"].apply(
+        lambda x: is_weekend_or_holiday(x)
+    )
+
+    return df
+
 
 def unnest_dict_columns(df, base_column):
     def unnest_dict(dict_obj, prefix=""):
