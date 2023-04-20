@@ -64,21 +64,37 @@ def preprocess(df) -> DataFrame:
         result_type="expand",
     )
 
-    df["shippingfree_methods"] = df["shippingfree_methods"].isna()
+    df["warranty"] = df["warranty"].apply(get_warranty_features)
+
+    df["total_qty"] = df.apply(
+        lambda x: get_variations_feature(x["variations"]), axis=1
+    )
 
     df["seller_addresscity_id"] = np.where(
         df.seller_addresscity_id == "", None, df.seller_addresscity_id
     )
 
-    df["total_qty"] = df.apply(lambda x: get_variations_feture(x["variations"]), axis=1)
+    df["status"] = np.where(
+        df["status"] == "not_yet_active", None, df["status"]
+    )  # fix cardinality issue
 
     df["title_used"] = df["title"].str.lower().str.contains("usado|used")
 
-    df["warranty"] = df["warranty"].apply(get_warranty_features)
+    df["video_id"] = df["video_id"].isna()
 
-    df["thumbnail_diff"] = df["secure_thumbnail"] != df["thumbnail"]
+    df["currency_id"] = np.where(df["currency_id"] == "ARS", True, False)
+
     df["thumbnail"] = np.where(df["thumbnail"].apply(len) == 0, False, True)
 
+    df["thumbnail_diff"] = df["secure_thumbnail"] != df["thumbnail"]
+
+    df["shippingfree_methods"] = df["shippingfree_methods"].isna()
+
+    df["official_store_id"] = df["official_store_id"].astype(str)
+
+    df["catalog_product_id"] = df["catalog_product_id"].astype(str)
+
+    # -- timestamp cols --#
     df["date_created"] = pd.to_datetime(
         df["date_created"], format="%Y-%m-%dT%H:%M:%S.%fZ"
     )
@@ -86,8 +102,19 @@ def preprocess(df) -> DataFrame:
         df["last_updated"], format="%Y-%m-%dT%H:%M:%S.%fZ"
     )
     df["days_since_update"] = (df["last_updated"] - df["date_created"]).dt.days
+    df["start_time"] = pd.to_datetime(df["start_time"], unit="ms")
+    df["stop_time"] = pd.to_datetime(df["stop_time"], unit="ms")
+    df["days_elapsed"] = (df["stop_time"] - df["start_time"]).dt.days
+
+    ar_holidays = holidays.AR()
     df["wknd_hlday_created"] = df["date_created"].apply(
-        lambda x: is_weekend_or_holiday(x)
+        is_weekend_or_holiday, args=(ar_holidays,)
+    )
+    df["wknd_hlday_start_time"] = df["start_time"].apply(
+        is_weekend_or_holiday, args=(ar_holidays,)
+    )
+    df["wknd_hlday_stop_time"] = df["stop_time"].apply(
+        is_weekend_or_holiday, args=(ar_holidays,)
     )
 
     return df
@@ -198,7 +225,7 @@ def unpack_list(lst):
         return None
 
 
-def get_variations_feture(row):
+def get_variations_feature(row):
     try:
         tot_qty = row[0]["sold_quantity"] + row[0]["available_quantity"]
         return tot_qty
@@ -214,16 +241,15 @@ def get_warranty_features(x):
             return False
         elif number_or_yes:
             return True
+        else:
+            return None
 
 
-def is_weekend_or_holiday(date):
+def is_weekend_or_holiday(date, ar_holidays):
     # Check if it's a weekend
     if date.weekday() >= 5:
-        return True
-
-    # Check if it's a public holiday in Argentina
-    ar_holidays = holidays.AR()
+        return "weekend"
     if date in ar_holidays:
-        return True
-
-    return False
+        return "holiday"
+    else:
+        return "weekday"
