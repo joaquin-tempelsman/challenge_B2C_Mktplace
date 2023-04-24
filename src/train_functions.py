@@ -185,9 +185,9 @@ def eval_model(y_test, X_test, test_clf, save_path, clf):
     if clf:
         y_pred_proba = test_clf.predict_proba(X_test)[:, 1]
         accuracy = accuracy_score(y_test, y_pred)
-        # auc = roc_auc_score(y_test, y_pred_proba)
+        auc = roc_auc_score(y_test, y_pred_proba)
         auc_pr = average_precision_score(y_test, y_pred)
-        metrics = {"accuracy": accuracy, "auc_pr": auc_pr}
+        metrics = {"accuracy": accuracy, "auc_pr": auc_pr, "auc": auc}
 
     else:
         r2 = r2_score(y_test, y_pred)
