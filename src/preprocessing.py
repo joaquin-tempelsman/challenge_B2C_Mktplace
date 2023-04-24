@@ -117,6 +117,9 @@ def preprocess(df) -> DataFrame:
         is_weekend_or_holiday, args=(ar_holidays,)
     )
 
+    df["seller_id_cnt"] = df["seller_id"]
+    df["category_id_cnt"] = df["category_id"]
+
     return df
 
 
