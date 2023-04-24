@@ -5,7 +5,13 @@ import numpy as np
 
 
 class DataFrameDtypeMapper:
-    def __init__(self, df_columns: list, cols_to_bool: list, cols_to_float: list, cols_to_cat: list):
+    def __init__(
+        self,
+        df_columns: list,
+        cols_to_bool: list,
+        cols_to_float: list,
+        cols_to_cat: list,
+    ):
         self.column_names_init = df_columns
         self.cols_to_bool = cols_to_bool
         self.cols_to_float = cols_to_float
