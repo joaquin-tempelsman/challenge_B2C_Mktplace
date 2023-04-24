@@ -9,6 +9,7 @@ from train_functions import (
     eval_model,
     get_optuna_plots,
     get_shap,
+    apply_feature_transform_pipeline,
 )
 from preprocessing import unnest_data, preprocess
 from sklearn.model_selection import KFold
@@ -21,6 +22,7 @@ from datetime import datetime
 from new_or_used import build_dataset
 import joblib
 from type_mapper import DataFrameDtypeMapper
+from encoding import encode_seller_antiq
 
 
 # --PARAMS--#
@@ -203,7 +205,11 @@ if __name__ == "__main__":
 
     pipeline_test = get_pipeline(
         numerical_cols=num_features,
-        categorical_cols=[x for x in all_features if x not in num_features],
+        categorical_cols=[
+            x
+            for x in all_features
+            if x not in num_features + drop_after_encoding_features
+        ],
         input_missing=cat_base_features + count_enc_features,
         cbe_enc=cat_id_features,
         rl_enc=cat_base_features,
@@ -211,28 +217,27 @@ if __name__ == "__main__":
     )
 
     logging.info("evaluating model on OOS data")
-    X_train_transformed = pipeline_test.fit_transform(X_train, y_train)
 
-    X_train_transformed = TypeMapper.map_col_names(X_train_transformed)
-
-    X_train_transformed = TypeMapper.cast_type(X_train_transformed)
+    X_train, X_test = apply_feature_transform_pipeline(
+        X_train,
+        y_train,
+        X_test,
+        pipeline_test,
+        TypeMapper,
+        drop_after_encoding_features,
+    )
 
     if CLF_task:
         model = LGBMClassifier(**study.best_params, random_state=SEED)
     else:
         model = LGBMRegressor(**study.best_params, random_state=SEED)
 
-    model = model.fit(X_train_transformed, y_train)
-    X_test_transformed = pipeline_test.transform(X_test)
+    model = model.fit(X_train, y_train)
 
-    X_test_transformed = TypeMapper.map_col_names(X_test_transformed)
-
-    X_test_transformed = TypeMapper.cast_type(X_test_transformed)
-
-    eval_model(y_test, X_test_transformed, model, output_path, clf=CLF_task)
+    eval_model(y_test, X_test, model, output_path, clf=CLF_task)
 
     if SHAP:
-        get_shap(model, X_train_transformed, output_path)
+        get_shap(model, X_test, output_path)
 
     # ! put after study end
     logging.info("saving optuna metrics")
