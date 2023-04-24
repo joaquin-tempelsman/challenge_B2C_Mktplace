@@ -30,7 +30,7 @@ CLF_task = True
 RAW_DATA_PATH = "raw_data/MLA_100k_checked_v3.jsonlines"  # sys.argv[1]
 TARGET = "condition"
 SHAP = True
-
+TRAIN_TEST_SPLIT = False
 START_UP_TRIALS = 20  # int(sys.argv[2])
 TRIALS = 70  # int(sys.argv[3])
 
@@ -93,6 +93,8 @@ num_features = [
     "days_elapsed",
 ]
 
+drop_after_encoding_features = ["date_created"]
+
 # types casting for lgbm
 cols_to_bool = cat_bool_features
 cols_to_float = cat_id_features + num_features + count_enc_features
@@ -104,6 +106,7 @@ all_features = (
     + cat_base_features
     + num_features
     + count_enc_features
+    + drop_after_encoding_features
 )
 
 if __name__ == "__main__":
@@ -139,11 +142,12 @@ if __name__ == "__main__":
         [x for x in all_features if x not in num_features]
     ].astype("category")
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_train, y_train, test_size=0.10, random_state=SEED, shuffle=True
-    )
+    if TRAIN_TEST_SPLIT:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_train, y_train, test_size=0.10, random_state=SEED, shuffle=True
+        )
 
-    logging.info("preparing processed train/test folds")
+    logging.info("preparing processed train/val folds")
     (
         X_training_folds,
         y_training_folds,
@@ -154,7 +158,11 @@ if __name__ == "__main__":
         y_train,
         get_pipeline(
             numerical_cols=num_features,
-            categorical_cols=[x for x in all_features if x not in num_features],
+            categorical_cols=[
+                x
+                for x in all_features
+                if x not in num_features + drop_after_encoding_features
+            ],
             input_missing=cat_base_features + count_enc_features,
             cbe_enc=cat_id_features,
             rl_enc=cat_base_features,
@@ -162,6 +170,7 @@ if __name__ == "__main__":
         ),
         KFold(n_splits=5, random_state=SEED, shuffle=True),
         TypeMapper=TypeMapper,
+        drop_after_encoding_features=drop_after_encoding_features,
     )
 
     logging.info(
