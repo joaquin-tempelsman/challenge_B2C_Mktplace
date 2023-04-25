@@ -33,8 +33,8 @@ RAW_DATA_PATH = "raw_data/MLA_100k_checked_v3.jsonlines"  # sys.argv[1]
 TARGET = "condition"
 SHAP = True
 TRAIN_TEST_SPLIT = False
-START_UP_TRIALS = 20  # int(sys.argv[2])
-TRIALS = 70  # int(sys.argv[3])
+START_UP_TRIALS = 40  # int(sys.argv[2])
+TRIALS = 140  # int(sys.argv[3])
 
 warnings.simplefilter("ignore")
 
@@ -43,43 +43,24 @@ logging.basicConfig(level=logging.INFO, format=log_fmt)
 
 
 cat_bool_features = [
-    "currency_id",
-    "video_id",
     "automatic_relist",
-    "shippinglocal_pick_up",
-    "shippingfree_shipping",
-    "nmp_cash",
-    "nmp_giro_postal",
     "nmp_buyer",
     "nmp_transf",
     "nmp_tc",
-    "warranty",
     "tag_good_qt",
-    "tag_dragg_bv",
-    "accepts_mercadopago",
-    "wknd_hlday_created",
-    "wknd_hlday_start_time",
-    "wknd_hlday_stop_time",
 ]
 
 
 cat_id_features = [
     "seller_id",
     "listing_type_id",
-    # "parent_item_id", #same as category_id
     "category_id",
-    "seller_addressstate_id",
     "seller_addresscity_id",
 ]
 
-count_enc_features = ["seller_id_cnt", "category_id_cnt"]
+count_enc_features = ["category_id_cnt"]
 
-cat_base_features = [
-    "buying_mode",
-    "status",
-    "shippingmode",
-    "seller_addressstate_name",
-]
+cat_base_features = ["buying_mode", "shippingmode", "seller_addressstate_name"]
 
 num_features = [
     "price",
@@ -97,10 +78,29 @@ num_features = [
 
 drop_after_encoding_features = ["date_created"]
 
-# types casting for lgbm
-cols_to_bool = cat_bool_features
-cols_to_float = cat_id_features + num_features + count_enc_features
-cols_to_cat = cat_base_features
+# #types casting for lgbm (removed boruta low quality features)
+cols_to_bool = ["automatic_relist", "nmp_buyer", "nmp_transf", "nmp_tc", "tag_good_qt"]
+
+cols_to_float = [
+    "seller_id",
+    "listing_type_id",
+    "category_id",
+    "seller_addresscity_id",
+    "price",
+    "initial_quantity",
+    "sold_quantity",
+    "available_quantity",
+    "pic_num_items",
+    "pic_max_size",
+    "pic_min_size",
+    "pic_num_sizes",
+    "nmp_qty",
+    "days_since_update",
+    "days_elapsed",
+    "category_id_cnt",
+]
+
+cols_to_cat = ["buying_mode", "shippingmode", "seller_addressstate_name"]
 
 all_features = (
     cat_bool_features
@@ -110,6 +110,7 @@ all_features = (
     + count_enc_features
     + drop_after_encoding_features
 )
+
 
 if __name__ == "__main__":
     run_time = datetime.now()
@@ -233,6 +234,9 @@ if __name__ == "__main__":
         model = LGBMRegressor(**study.best_params, random_state=SEED)
 
     model = model.fit(X_train, y_train)
+
+    X_train.to_csv("X_train.csv")
+    y_train.to_csv("y_train.csv")
 
     eval_model(y_test, X_test, model, output_path, clf=CLF_task)
 
