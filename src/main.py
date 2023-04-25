@@ -2,6 +2,17 @@ import warnings
 import logging
 import os
 import pandas as pd
+import joblib
+from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
+from lightgbm import LGBMRegressor, LGBMClassifier
+import optuna
+from optuna.samplers import TPESampler
+import datetime
+from datetime import datetime
+
+from new_or_used import build_dataset
+from type_mapper import DataFrameDtypeMapper
 from train_functions import (
     get_pipeline,
     split_and_process_data,
@@ -12,17 +23,6 @@ from train_functions import (
     apply_feature_transform_pipeline,
 )
 from preprocessing import unnest_data, preprocess
-from sklearn.model_selection import KFold
-from sklearn.model_selection import train_test_split
-from lightgbm import LGBMRegressor, LGBMClassifier
-import optuna
-from optuna.samplers import TPESampler
-import datetime
-from datetime import datetime
-from new_or_used import build_dataset
-import joblib
-from type_mapper import DataFrameDtypeMapper
-from encoding import encode_seller_antiq
 
 
 # --PARAMS--#
