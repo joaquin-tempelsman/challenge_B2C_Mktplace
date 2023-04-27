@@ -78,6 +78,7 @@ number of features: 25
 - add features that describe how many post the seller made in the last N days (multiple windows)  
 - add 'sigma' parameter from CatBoostEncoder to the search space of the hyperparameter tunning search space as well as other relevante parameters that can impact the features encoding step
 - multi-hot encode the title (after cleaning noise), train a Deep learning simple model to predict the probability for the title to belong to a 'used' item and use that probability as a feature
+- modify categorical feature pipeline to use OrdinalEncoder first so it handles unknown categories correctly during inference time and then pass them to the 'categorical_feature' param in LGBMClassifier object instead of using .astype('category')
 
 
 
