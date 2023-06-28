@@ -1,7 +1,7 @@
-## Challenge @ Mercado Libre
+## Challenge @ Marketplace
 
 
-In the context of Mercadolibre's Marketplace an algorithm is needed to predict if an item listed in the markeplace is new or used.
+In the context of a B2C amazon like Marketplace, an algorithm is needed to predict if an item listed in the markeplace is new or used.
 
 Your tasks involve the data analysis, designing, processing and modeling of a machine learning solution 
 to predict if an item is new or used and then evaluate the model over held-out test data.
