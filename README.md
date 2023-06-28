@@ -6,8 +6,6 @@ In the context of a B2C amazon like Marketplace, an algorithm is needed to predi
 Your tasks involve the data analysis, designing, processing and modeling of a machine learning solution 
 to predict if an item is new or used and then evaluate the model over held-out test data.
 
-To assist in that task a dataset is provided in `MLA_100k_checked_v3.jsonlines` and a function to read that dataset in `build_dataset`.
-
 For the evaluation, you will use the accuracy metric in order to get a result of 0.86 as minimum. 
 Additionally, you will have to choose an appropiate secondary metric and also elaborate an argument on why that metric was chosen.
 
