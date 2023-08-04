@@ -233,7 +233,7 @@ if __name__ == "__main__":
     else:
         model = LGBMRegressor(**study.best_params, random_state=SEED)
 
-    model = model.fit(X_train, y_train)
+    model.fit(X_train, y_train)
 
     X_train.to_csv("X_train.csv")
     y_train.to_csv("y_train.csv")
