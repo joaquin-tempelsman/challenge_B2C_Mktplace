@@ -25,7 +25,6 @@ optuna==3.1.1
 packaging==23.1
 pandas==2.0.1
 patsy==0.5.3
-Pillow==9.5.0
 plotly==5.14.1
 PyMeeus==0.5.12
 pyparsing==3.0.9
